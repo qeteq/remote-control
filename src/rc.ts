@@ -57,8 +57,18 @@ class Rc {
   drawSquare = (size: Px) => this.drawRect(size, size);
 
   drawCircle = (radius: Px) => {
-    console.error('draw_circle not implemented');
-    this.io.send(Buffer.from(String(radius)));
+    const center = this.robot.getMousePosition();
+    const segments = 90;
+    const points = new Array(segments + 1);
+    for (let i = 0; i <= segments; i++) {
+      const angle = i * 2 * Math.PI / segments;
+      points[i] = {
+        x: Math.round(radius * Math.cos(angle)),
+        y: Math.round(radius * Math.sin(angle)),
+      }
+    }
+    this.robot.draw(center, points);
+    this.robot.moveMouseTo(center);
   };
 
   takeScreenshot = () => {
