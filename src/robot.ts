@@ -40,7 +40,7 @@ class Robot {
     const { x: sx, y: sy } = startPoint;
     for (let i = 0; i < points.length; i += 1) {
       const { x, y } = points[i];
-      this.api.moveMouse(sx + x, sy + y);
+      await this.api.moveMouse(sx + x, sy + y);
       if (i === 0) {
         await this.api.mouseToggle('down', 'left');
       } else if (i === points.length - 1) {

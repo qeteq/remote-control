@@ -7,10 +7,12 @@ import {
   screen,
   getScreenSize,
 } from 'robotjs';
+import { sleep } from './util/sleep';
 
 import type { RobotApi } from './robot';
 import type { Px } from './types';
 
+const MOUSE_MOVEMENT_DELAY_MS = 10;
 const SCREENSHOT_WIDTH: Px = 200;
 const SCREENSHOT_HEIGHT: Px = 200;
 
@@ -57,6 +59,7 @@ async function captureScreen(): Promise<Buffer> {
 
 const robotJsApi: RobotApi = {
   async moveMouse(x, y) {
+    await sleep(MOUSE_MOVEMENT_DELAY_MS);
     return moveMouse(x, y);
   },
   async getMousePos() {
