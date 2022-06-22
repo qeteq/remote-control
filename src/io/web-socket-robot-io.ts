@@ -1,11 +1,12 @@
 import { promisify } from 'util';
 import { WebSocket } from 'ws';
+import { once } from 'events';
+import assert from 'assert';
 import { RobotIo, isCommand } from './robot-io';
 
 import type { Readable } from 'stream';
 import type { RawData } from 'ws';
-import { once } from 'events';
-import assert from 'assert';
+import { Vector } from '../types';
 
 type SendOptions = Partial<{
   mask: boolean;
@@ -31,17 +32,18 @@ class WebSocketRobotIo extends RobotIo {
     this.socket.once('close', this.dispose);
   }
 
-  send(data: Buffer | string | Readable): void {
-    this.queue.push(data);
+  sendMousePosition({ x, y }: Vector): void {
+    this.queue.push(`mouse_position ${x},${y}`);
     this.processQueue();
   }
 
-  stream(stream: Readable): void {
-    this.queue.push(stream);
+  sendScreenshot(data: Buffer): void {
+    const b64 = data.toString('base64');
+    this.queue.push(`prnt_scrn ${b64}`);
     this.processQueue();
   }
 
-  dispose = () => {
+  dispose = async () => {
     this.socket.off('message', this.handleMessage);
     const { readyState } = this.socket;
     if (readyState === WebSocket.CONNECTING || readyState === WebSocket.OPEN) {
@@ -74,7 +76,7 @@ class WebSocketRobotIo extends RobotIo {
     while (this.queue.length) {
       const data = this.queue.shift()!;
       if (typeof data === 'string' || Buffer.isBuffer(data)) {
-        await this.safeSend(data)
+        await this.safeSend(data);
       } else {
         for await (const chunk of data) {
           await this.safeSend(chunk);
@@ -94,33 +96,38 @@ class WebSocketRobotIo extends RobotIo {
       return;
     }
 
+    console.log('cmd:', cmd, args);
+
     switch (cmd) {
+      // 0 args
       case 'prnt_scrn':
-      case 'mouse_position':
+      case 'mouse_position': {
         this.emit(cmd);
         break;
+      }
 
+      // 1 arg
       case 'mouse_up':
       case 'mouse_down':
       case 'mouse_left':
       case 'mouse_right':
       case 'draw_circle':
-      case 'draw_square':
+      case 'draw_square': {
         const [px] = args.map(Number);
         if (!isNaN(px)) {
           this.emit(cmd, px);
         }
         break;
+      }
 
-      case 'draw_rectangle':
+      // 2 args
+      case 'draw_rectangle': {
         const [px1, px2] = args.map(Number);
         if (!isNaN(px1) && !isNaN(px2)) {
           this.emit(cmd, px1, px2);
         }
         break;
-
-      default:
-        break;
+      }
     }
   };
 

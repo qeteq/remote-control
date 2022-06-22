@@ -1,11 +1,19 @@
-import { Readable } from 'stream';
 import { Px, Vector } from './types';
 
 interface RobotApi {
-  moveMouse(x: Px, y: Px): void;
-  getMousePos(): Vector;
-  mouseToggle(down: 'down' | 'up', button: 'left' | 'right' | 'middle'): void;
-  dispose(): void;
+  moveMouse(x: Px, y: Px): Promise<void>;
+  getMousePos(): Promise<Vector>;
+  mouseToggle(
+    down: 'down' | 'up',
+    button: 'left' | 'right' | 'middle'
+  ): Promise<void>;
+  captureScreen(
+    x?: number,
+    y?: number,
+    width?: number,
+    height?: number
+  ): Promise<Buffer>;
+  dispose(): Promise<void>;
 }
 
 class Robot {
@@ -15,37 +23,38 @@ class Robot {
     this.api = api;
   }
 
-  moveMouseBy(vector: Vector) {
-    const { x, y } = this.api.getMousePos();
-    this.api.moveMouse(x + vector.x, y + vector.y);
+  async moveMouseBy(vector: Vector) {
+    const { x, y } = await this.api.getMousePos();
+    await this.api.moveMouse(x + vector.x, y + vector.y);
   }
 
-  moveMouseTo(vector: Vector): void {
-    this.api.moveMouse(vector.x, vector.y);
+  async moveMouseTo(vector: Vector) {
+    await this.api.moveMouse(vector.x, vector.y);
   }
 
-  getMousePosition(): Vector {
+  async getMousePosition() {
     return this.api.getMousePos();
   }
 
-  draw(startPoint: Vector, points: Vector[]): void {
+  async draw(startPoint: Vector, points: Vector[]) {
     const { x: sx, y: sy } = startPoint;
-    points.forEach(({ x, y }, i, { length }) => {
+    for (let i = 0; i < points.length; i += 1) {
+      const { x, y } = points[i];
       this.api.moveMouse(sx + x, sy + y);
       if (i === 0) {
-        this.api.mouseToggle('down', 'left');
-      } else if (i === length - 1) {
-        this.api.mouseToggle('up', 'left');
+        await this.api.mouseToggle('down', 'left');
+      } else if (i === points.length - 1) {
+        await this.api.mouseToggle('up', 'left');
       }
-    });
+    }
   }
 
-  takeScreenshot(): Readable {
-    return null as any;
+  async takeScreenshot() {
+    return this.api.captureScreen();
   }
 
-  dispose(): void {
-    this.api.dispose();
+  async dispose() {
+    await this.api.dispose();
   }
 }
 

@@ -1,24 +1,19 @@
-// import Jimp from 'jimp';
-import { moveMouse, getMousePos, mouseToggle }  from 'robotjs';
 import { WebSocketServer } from 'ws';
 
-import { httpServer } from './http-server';
+import { createServer } from './http';
 import { Robot } from './robot';
 import { WebSocketRobotIo } from './io/web-socket-robot-io';
+import { Rc } from './rc';
+import { robotJsApi } from './robotjs-api';
 
 import type { AddressInfo } from 'net';
-import { Rc } from './rc';
 
 const HTTP_PORT = 3000;
 
-const ws = new WebSocketServer({ server: httpServer });
+const server = createServer();
+const ws = new WebSocketServer({ server });
 
-const robot = new Robot({
-  moveMouse,
-  getMousePos,
-  mouseToggle,
-  dispose: () => {},
-});
+const robot = new Robot(robotJsApi);
 
 ws.on('connection', (s) => {
   const rc = new Rc(new WebSocketRobotIo(s), robot);
@@ -26,7 +21,7 @@ ws.on('connection', (s) => {
   s.once('error', () => rc.dispose());
 });
 
-httpServer.listen(HTTP_PORT, () => {
-  const addr = httpServer.address() as AddressInfo;
+server.listen(HTTP_PORT, () => {
+  const addr = server.address() as AddressInfo;
   console.log(`Listening on http://localhost:${addr.port}`);
 });

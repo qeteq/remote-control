@@ -1,6 +1,5 @@
 import { EventEmitter } from '../util/ee';
-import { Readable } from 'stream';
-import { Px } from '../types';
+import { Px, Vector } from '../types';
 
 interface RobotIoEventsMap {
   mouse_up: [Px];
@@ -18,9 +17,9 @@ interface RobotIoEventsMap {
  * Handle external input and output for our robot
  */
 abstract class RobotIo extends EventEmitter<RobotIoEventsMap> {
-  abstract send(buffer: Buffer | string): void;
-  abstract stream(stream: Readable): void;
-  abstract dispose(): void;
+  abstract sendMousePosition(coords: Vector): void;
+  abstract sendScreenshot(data: Buffer): void;
+  abstract dispose(): Promise<void>;
 }
 
 type Command = keyof RobotIoEventsMap;
