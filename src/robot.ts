@@ -38,6 +38,7 @@ class Robot {
 
   async draw(startPoint: Vector, points: Vector[]) {
     const { x: sx, y: sy } = startPoint;
+    /* eslint-disable no-await-in-loop */
     for (let i = 0; i < points.length; i += 1) {
       const { x, y } = points[i];
       await this.api.moveMouse(sx + x, sy + y);
@@ -47,6 +48,7 @@ class Robot {
         await this.api.mouseToggle('up', 'left');
       }
     }
+    /* eslint-enable no-await-in-loop */
   }
 
   async takeScreenshot() {

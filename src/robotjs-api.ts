@@ -1,5 +1,4 @@
 import Jimp from 'jimp';
-import assert from 'assert';
 import {
   moveMouse,
   getMousePos,
@@ -17,12 +16,14 @@ const SCREENSHOT_WIDTH: Px = 200;
 const SCREENSHOT_HEIGHT: Px = 200;
 
 function minmax(min: number, value: number, max: number) {
-  assert(max >= min, 'minmax: max >= min');
-  return value < min ? min : value > max ? max : value;
+  if (value < min) return min;
+  if (value > max) return max;
+  return value;
 }
 
 function bgrToRgb(b: Buffer): void {
   for (let i = 0, l = b.length; i < l; i += 4) {
+    // eslint-disable-next-line no-param-reassign
     [b[i], b[i + 2]] = [b[i + 2], b[i]];
   }
 }
@@ -51,7 +52,7 @@ async function captureScreen(): Promise<Buffer> {
     data: bitmap.image,
     width: bitmap.width,
     height: bitmap.height,
-  } as any);
+  } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
   const pngBuffer = await image.getBufferAsync(Jimp.MIME_PNG);
   return pngBuffer;

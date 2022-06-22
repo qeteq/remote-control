@@ -1,11 +1,10 @@
-import { promisify } from 'util';
 import { WebSocket } from 'ws';
 import { once } from 'events';
 import assert from 'assert';
-import { RobotIo, isCommand } from './robot-io';
-
 import type { Readable } from 'stream';
 import type { RawData } from 'ws';
+
+import { RobotIo, isCommand } from './robot-io';
 import { Vector } from '../types';
 
 type SendOptions = Partial<{
@@ -17,15 +16,15 @@ type SendOptions = Partial<{
 
 class WebSocketRobotIo extends RobotIo {
   private socket: WebSocket;
+
   private queue: Array<string | Buffer | Readable>;
-  private isProcessing: boolean = false;
-  private asyncSend: (data: any, options?: SendOptions) => Promise<void>;
+
+  private isProcessing = false;
 
   constructor(client: WebSocket) {
     super();
     this.socket = client;
     this.queue = [];
-    this.asyncSend = promisify(client.send).bind(client) as any;
 
     this.socket.on('message', this.handleMessage);
     this.socket.once('error', this.handleError);
@@ -51,15 +50,22 @@ class WebSocketRobotIo extends RobotIo {
     }
   };
 
-  private async safeSend(data: any, options?: SendOptions) {
+  private async send(data: string | Buffer, options: SendOptions) {
     assert(
       this.socket.readyState !== WebSocket.CONNECTING,
       'sendChunk is called after socket has been connected'
     );
 
-    if (this.socket.readyState === WebSocket.OPEN) {
-      await this.asyncSend(data, options);
+    if (this.socket.readyState !== WebSocket.OPEN) {
+      return;
     }
+
+    await new Promise<void>((resolve, reject) => {
+      this.socket.send(data, options, (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
   }
 
   private async processQueue() {
@@ -73,17 +79,20 @@ class WebSocketRobotIo extends RobotIo {
       await once(this.socket, 'open');
     }
 
+    /* eslint-disable no-await-in-loop */
     while (this.queue.length) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const data = this.queue.shift()!;
       if (typeof data === 'string' || Buffer.isBuffer(data)) {
-        await this.safeSend(data);
+        await this.send(data, {});
       } else {
         for await (const chunk of data) {
-          await this.safeSend(chunk);
+          await this.send(chunk, {});
         }
         this.socket.send('\x00');
       }
     }
+    /* eslint-enable no-await-in-loop */
 
     this.isProcessing = false;
   }
@@ -95,8 +104,6 @@ class WebSocketRobotIo extends RobotIo {
     if (!isCommand(cmd)) {
       return;
     }
-
-    console.log('cmd:', cmd, args);
 
     switch (cmd) {
       // 0 args
@@ -114,7 +121,7 @@ class WebSocketRobotIo extends RobotIo {
       case 'draw_circle':
       case 'draw_square': {
         const [px] = args.map(Number);
-        if (!isNaN(px)) {
+        if (!Number.isNaN(px)) {
           this.emit(cmd, px);
         }
         break;
@@ -123,9 +130,13 @@ class WebSocketRobotIo extends RobotIo {
       // 2 args
       case 'draw_rectangle': {
         const [px1, px2] = args.map(Number);
-        if (!isNaN(px1) && !isNaN(px2)) {
+        if (!Number.isNaN(px1) && !Number.isNaN(px2)) {
           this.emit(cmd, px1, px2);
         }
+        break;
+      }
+
+      default: {
         break;
       }
     }

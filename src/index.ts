@@ -1,12 +1,11 @@
 import { WebSocketServer } from 'ws';
+import type { AddressInfo } from 'net';
 
 import { createServer } from './http';
 import { Robot } from './robot';
 import { WebSocketRobotIo } from './io/web-socket-robot-io';
 import { Rc } from './rc';
 import { robotJsApi } from './robotjs-api';
-
-import type { AddressInfo } from 'net';
 
 const HTTP_PORT = 3000;
 

@@ -4,6 +4,7 @@ import type { Px } from '../types';
 
 class Rc {
   private io: RobotIo;
+
   private robot: Robot;
 
   constructor(robotIo: RobotIo, robot: Robot) {
@@ -60,7 +61,7 @@ class Rc {
     const center = await this.robot.getMousePosition();
     const segments = 360;
     const points = new Array(segments + 1);
-    for (let i = 0; i <= segments; i++) {
+    for (let i = 0; i <= segments; i += 1) {
       const angle = (i * 2 * Math.PI) / segments;
       points[i] = {
         x: Math.round(radius * Math.cos(angle * mx)),

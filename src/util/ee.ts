@@ -53,4 +53,6 @@ interface TypedEventEmitter<TMapping> {
   eventNames(): Array<keyof TMapping>;
 }
 
-export const EventEmitter: { new <T>(): TypedEventEmitter<T> } = EE as any;
+type EventEmitterConstructor = { new <T>(): TypedEventEmitter<T> };
+
+export const EventEmitter = EE as unknown as EventEmitterConstructor;

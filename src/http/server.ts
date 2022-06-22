@@ -5,13 +5,15 @@ import * as http from 'http';
 const rootDir = path.resolve(__dirname, '..', '..', 'front');
 
 export const createServer = () =>
-  http.createServer(function (req, res) {
+  http.createServer((req, res) => {
+    if (!req.url) return;
+
     const filePath = path.join(
       rootDir,
-      req.url === '/' ? 'index.html' : req.url!
+      req.url === '/' ? 'index.html' : req.url
     );
 
-    fs.readFile(filePath, function (err, data) {
+    fs.readFile(filePath, (err, data) => {
       if (err) {
         res.writeHead(404);
         res.end(JSON.stringify(err));
