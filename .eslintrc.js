@@ -19,8 +19,23 @@ module.exports = {
     'airbnb-typescript/base',
     'prettier',
   ],
+  settings: {
+    'import/resolver': {
+      node: {
+        extensions: ['.js', '.ts'],
+      },
+    },
+  },
   rules: {
     'import/prefer-default-export': 'off',
+    'import/extensions': [
+      'error',
+      'ignorePackages',
+      {
+        js: 'never',
+        ts: 'never',
+      },
+    ],
     'no-restricted-syntax': [
       'error',
       {

@@ -6,20 +6,14 @@ import {
   screen,
   getScreenSize,
 } from 'robotjs';
-import { sleep } from './util/sleep';
 
-import type { RobotApi } from './robot';
-import type { Px } from './types';
+import { sleep } from '../../util';
+
+import type { AutomationApi } from '../interfaces';
 
 const MOUSE_MOVEMENT_DELAY_MS = 10;
-const SCREENSHOT_WIDTH: Px = 200;
-const SCREENSHOT_HEIGHT: Px = 200;
-
-function minmax(min: number, value: number, max: number) {
-  if (value < min) return min;
-  if (value > max) return max;
-  return value;
-}
+const SCREENSHOT_WIDTH = 200;
+const SCREENSHOT_HEIGHT = 200;
 
 function bgrToRgb(b: Buffer): void {
   for (let i = 0, l = b.length; i < l; i += 4) {
@@ -31,16 +25,9 @@ function bgrToRgb(b: Buffer): void {
 async function captureScreen(): Promise<Buffer> {
   const { x: mouseX, y: mouseY } = getMousePos();
   const { width: screenWidth, height: screenHeight } = getScreenSize();
-  const x = minmax(
-    0,
-    mouseX - SCREENSHOT_WIDTH / 2,
-    screenWidth - SCREENSHOT_WIDTH
-  );
-  const y = minmax(
-    0,
-    mouseY - SCREENSHOT_HEIGHT / 2,
-    screenHeight - SCREENSHOT_HEIGHT
-  );
+
+  const x = mouseX;
+  const y = mouseY;
   const width = Math.min(SCREENSHOT_WIDTH, screenWidth);
   const height = Math.min(SCREENSHOT_HEIGHT, screenHeight);
 
@@ -59,12 +46,12 @@ async function captureScreen(): Promise<Buffer> {
   return pngBuffer;
 }
 
-const robotJsApi: RobotApi = {
-  async moveMouse(x, y) {
+const robotjsApi: AutomationApi = {
+  async moveMouseTo(x, y) {
     await sleep(MOUSE_MOVEMENT_DELAY_MS);
-    return moveMouse(x, y);
+    moveMouse(x, y);
   },
-  async getMousePos() {
+  async getMousePosition() {
     return getMousePos();
   },
   async mouseToggle(down, button) {
@@ -74,4 +61,4 @@ const robotJsApi: RobotApi = {
   dispose: () => {},
 };
 
-export { robotJsApi };
+export { robotjsApi };

@@ -1,26 +1,30 @@
+import { AddressInfo } from 'net';
 import { WebSocketServer } from 'ws';
-import type { AddressInfo } from 'net';
-
+import { Automation, robotjsApi } from './automation';
 import { createServer } from './http';
-import { Robot } from './robot';
-import { WebSocketRobotIo } from './io/web-socket-robot-io';
-import { Rc } from './rc';
-import { robotJsApi } from './robotjs-api';
+import { WebSocketInput } from './input';
+import { WebSocketOutput } from './output';
+import { RemoteControl } from './remote-control';
 
-const HTTP_PORT = 3000;
+const HTTP_PORT = 8080;
 
 const server = createServer();
-const ws = new WebSocketServer({ server });
+const wss = new WebSocketServer({ server });
+const automation = new Automation(robotjsApi);
 
-const robot = new Robot(robotJsApi);
+wss.on('connection', (socket) => {
+  const input = new WebSocketInput(socket);
+  const output = new WebSocketOutput(socket);
+  const rc = new RemoteControl({ input, output, automation });
 
-ws.on('connection', (s) => {
-  const rc = new Rc(new WebSocketRobotIo(s), robot);
   const cleanup = () => {
+    input.dispose();
     rc.dispose();
+    socket.off('error', cleanup);
+    socket.off('close', cleanup);
   };
-  s.once('close', cleanup);
-  s.once('error', cleanup);
+  socket.on('error', cleanup);
+  socket.on('close', cleanup);
 });
 
 server.listen(HTTP_PORT, () => {

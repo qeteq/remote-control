@@ -1,5 +1,8 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
+import '@jimp/core';
+
 declare module '@jimp/core' {
-  interface JimpConstructors {
+  export interface JimpConstructors {
     read(rawImage: {
       data: Buffer;
       width: number;

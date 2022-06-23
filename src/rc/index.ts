@@ -1,1 +1,0 @@
-export { Rc } from './rc';
