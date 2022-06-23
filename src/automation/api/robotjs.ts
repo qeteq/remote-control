@@ -7,11 +7,9 @@ import {
   getScreenSize,
 } from 'robotjs';
 
-import { sleep } from '../../util';
-
 import type { AutomationApi } from '../interfaces';
 
-const MOUSE_MOVEMENT_DELAY_MS = 10;
+const SMOOTH_SEGMENT_LENGTH = 10;
 const SCREENSHOT_WIDTH = 200;
 const SCREENSHOT_HEIGHT = 200;
 
@@ -61,11 +59,26 @@ async function captureScreen(): Promise<Buffer> {
 }
 
 const robotjsApi: AutomationApi = {
-  async moveMouseTo(x, y) {
-    // Some application (like paint.net) cannot handle instant mouse moves.
-    // Small delay fixes this problem (probably)
-    await sleep(MOUSE_MOVEMENT_DELAY_MS);
-    moveMouse(x, y);
+  async moveMouseTo(x, y, smooth = false) {
+    if (smooth) {
+      const { x: sx, y: sy } = getMousePos();
+      const dx = x - sx;
+      const dy = y - sy;
+      const length = Math.sqrt(dx ** 2 + dy ** 2);
+      const steps = length / SMOOTH_SEGMENT_LENGTH;
+      const intSteps = Math.floor(steps);
+      for (let i = 0; i < intSteps; i += 1) {
+        moveMouse(
+          sx + (dx / intSteps) * (i + 1),
+          sy + (dy / intSteps) * (i + 1)
+        );
+      }
+      if (steps > intSteps) {
+        moveMouse(x, y);
+      }
+    } else {
+      moveMouse(x, y);
+    }
   },
   async getMousePosition() {
     return getMousePos();

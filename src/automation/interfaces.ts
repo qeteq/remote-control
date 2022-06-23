@@ -1,7 +1,7 @@
 import { Vector, Px } from '../types';
 
 export interface AutomationApi {
-  moveMouseTo(x: Px, y: Px): Promise<void>;
+  moveMouseTo(x: Px, y: Px, smooth?: boolean): Promise<void>;
   getMousePosition(): Promise<Vector>;
   mouseToggle(
     down: 'down' | 'up',

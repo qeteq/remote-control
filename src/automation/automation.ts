@@ -27,7 +27,8 @@ class Automation {
     /* eslint-disable no-await-in-loop */
     for (let i = 0; i < points.length; i += 1) {
       const { x, y } = points[i];
-      await this.api.moveMouseTo(sx + x, sy + y);
+      const smooth = i !== 0;
+      await this.api.moveMouseTo(sx + x, sy + y, smooth);
       if (i === 0) {
         await this.api.mouseToggle('down', 'left');
       } else if (i === points.length - 1) {
