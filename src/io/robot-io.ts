@@ -17,9 +17,9 @@ interface RobotIoEventsMap {
  * Handle external input and output for our robot
  */
 abstract class RobotIo extends EventEmitter<RobotIoEventsMap> {
-  abstract sendMousePosition(coords: Vector): void;
-  abstract sendScreenshot(data: Buffer): void;
-  abstract dispose(): Promise<void>;
+  abstract sendMousePosition(coords: Vector): Promise<void>;
+  abstract sendScreenshot(data: Buffer): Promise<void>;
+  abstract dispose(): void;
 }
 
 type Command = keyof RobotIoEventsMap;

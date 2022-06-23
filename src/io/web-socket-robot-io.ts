@@ -1,7 +1,6 @@
 import { WebSocket } from 'ws';
 import { once } from 'events';
 import assert from 'assert';
-import type { Readable } from 'stream';
 import type { RawData } from 'ws';
 
 import { RobotIo, isCommand } from './robot-io';
@@ -17,7 +16,7 @@ type SendOptions = Partial<{
 class WebSocketRobotIo extends RobotIo {
   private socket: WebSocket;
 
-  private queue: Array<string | Buffer | Readable>;
+  private queue: Array<string | Buffer>;
 
   private isProcessing = false;
 
@@ -31,18 +30,18 @@ class WebSocketRobotIo extends RobotIo {
     this.socket.once('close', this.dispose);
   }
 
-  sendMousePosition({ x, y }: Vector): void {
+  async sendMousePosition({ x, y }: Vector) {
     this.queue.push(`mouse_position ${x},${y}`);
-    this.processQueue();
+    await this.processQueue();
   }
 
-  sendScreenshot(data: Buffer): void {
+  async sendScreenshot(data: Buffer) {
     const b64 = data.toString('base64');
     this.queue.push(`prnt_scrn ${b64}`);
-    this.processQueue();
+    await this.processQueue();
   }
 
-  dispose = async () => {
+  dispose = () => {
     this.socket.off('message', this.handleMessage);
     const { readyState } = this.socket;
     if (readyState === WebSocket.CONNECTING || readyState === WebSocket.OPEN) {
@@ -83,14 +82,7 @@ class WebSocketRobotIo extends RobotIo {
     while (this.queue.length) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const data = this.queue.shift()!;
-      if (typeof data === 'string' || Buffer.isBuffer(data)) {
-        await this.send(data, {});
-      } else {
-        for await (const chunk of data) {
-          await this.send(chunk, {});
-        }
-        this.socket.send('\x00');
-      }
+      await this.send(data, {});
     }
     /* eslint-enable no-await-in-loop */
 

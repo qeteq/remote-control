@@ -16,8 +16,11 @@ const robot = new Robot(robotJsApi);
 
 ws.on('connection', (s) => {
   const rc = new Rc(new WebSocketRobotIo(s), robot);
-  s.once('close', () => rc.dispose());
-  s.once('error', () => rc.dispose());
+  const cleanup = () => {
+    rc.dispose();
+  };
+  s.once('close', cleanup);
+  s.once('error', cleanup);
 });
 
 server.listen(HTTP_PORT, () => {

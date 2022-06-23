@@ -1,6 +1,14 @@
 import type { Robot } from '../robot';
 import type { RobotIo } from '../io';
-import type { Px } from '../types';
+import type { Px, Vector } from '../types';
+
+const silent =
+  <TArgs extends unknown[]>(fn: (...args: TArgs) => Promise<unknown>) =>
+  (...args: TArgs) => {
+    fn(...args).catch((error) => {
+      console.error(error);
+    });
+  };
 
 class Rc {
   private io: RobotIo;
@@ -11,15 +19,15 @@ class Rc {
     this.io = robotIo;
     this.robot = robot;
 
-    this.io.on('mouse_up', this.mouseUp);
-    this.io.on('mouse_down', this.mouseDown);
-    this.io.on('mouse_left', this.mouseLeft);
-    this.io.on('mouse_right', this.mouseRight);
-    this.io.on('draw_rectangle', this.drawRect);
-    this.io.on('draw_square', this.drawSquare);
-    this.io.on('draw_circle', this.drawCircle);
-    this.io.on('prnt_scrn', this.takeScreenshot);
-    this.io.on('mouse_position', this.sendMousePosition);
+    this.io.on('mouse_up', silent(this.mouseUp));
+    this.io.on('mouse_down', silent(this.mouseDown));
+    this.io.on('mouse_left', silent(this.mouseLeft));
+    this.io.on('mouse_right', silent(this.mouseRight));
+    this.io.on('draw_rectangle', silent(this.drawRect));
+    this.io.on('draw_square', silent(this.drawSquare));
+    this.io.on('draw_circle', silent(this.drawCircle));
+    this.io.on('prnt_scrn', silent(this.takeScreenshot));
+    this.io.on('mouse_position', silent(this.sendMousePosition));
   }
 
   mouseUp = async (dist: Px) => {
@@ -60,7 +68,7 @@ class Rc {
   drawCircle = async (radius: Px, mx: Px = 1, my: Px = 1) => {
     const center = await this.robot.getMousePosition();
     const segments = 360;
-    const points = new Array(segments + 1);
+    const points = new Array<Vector>(segments + 1);
     for (let i = 0; i <= segments; i += 1) {
       const angle = (i * 2 * Math.PI) / segments;
       points[i] = {
@@ -74,17 +82,17 @@ class Rc {
 
   takeScreenshot = async () => {
     const buffer = await this.robot.takeScreenshot();
-    this.io.sendScreenshot(buffer);
+    await this.io.sendScreenshot(buffer);
   };
 
   sendMousePosition = async () => {
     const position = await this.robot.getMousePosition();
-    this.io.sendMousePosition(position);
+    await this.io.sendMousePosition(position);
   };
 
-  async dispose() {
-    await this.io.dispose();
-    await this.robot.dispose();
+  dispose() {
+    this.io.dispose();
+    this.robot.dispose();
   }
 }
 

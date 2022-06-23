@@ -1,4 +1,7 @@
 {
+    "ts-node": {
+        "files": true
+    },
     "compilerOptions": {
         "lib": ["ES2021"],
         "module": "CommonJS",
@@ -15,5 +18,5 @@
         "declaration": true,
         "declarationMap": true
     },
-    "include": ["src/**/*"]
+    "include": ["src/**/*", "global.d.ts"]
 }

@@ -13,7 +13,7 @@ interface RobotApi {
     width?: number,
     height?: number
   ): Promise<Buffer>;
-  dispose(): Promise<void>;
+  dispose(): void;
 }
 
 class Robot {
@@ -55,8 +55,8 @@ class Robot {
     return this.api.captureScreen();
   }
 
-  async dispose() {
-    await this.api.dispose();
+  dispose() {
+    this.api.dispose();
   }
 }
 

@@ -45,14 +45,15 @@ async function captureScreen(): Promise<Buffer> {
   const height = Math.min(SCREENSHOT_HEIGHT, screenHeight);
 
   const bitmap = screen.capture(x, y, width, height);
+  const rawData = bitmap.image as Buffer;
 
-  bgrToRgb(bitmap.image);
+  bgrToRgb(rawData);
 
   const image = await Jimp.read({
-    data: bitmap.image,
+    data: rawData,
     width: bitmap.width,
     height: bitmap.height,
-  } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+  });
 
   const pngBuffer = await image.getBufferAsync(Jimp.MIME_PNG);
   return pngBuffer;
@@ -70,7 +71,7 @@ const robotJsApi: RobotApi = {
     return mouseToggle(down, button);
   },
   captureScreen,
-  dispose: () => Promise.resolve(),
+  dispose: () => {},
 };
 
 export { robotJsApi };
